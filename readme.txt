@@ -1,2 +1,1 @@
-Bankapplication mit kompletter funktion!
-SQLite
+My first own Project.
