@@ -236,21 +236,16 @@ namespace AtmSqlite
                                 else if (AdminInput == "5" || AdminInput == "exit" || AdminInput == "Exit")
                                 {
                                     Console.Clear();
-                                    Console.WriteLine("See you soon!");                        
+                                    Console.WriteLine("See you soon!");
+                                    Environment.Exit(0);
                                     break;
                                 }
                                 else
                                 {
                                     Console.Clear();
                                     Console.WriteLine("Sorry, your Input doesn't make sense :)");
-                                }
-
-
-
-
-
-                            // git sample
-                    }
+                                }     
+                        }
                     }
                     else
                     {
@@ -548,7 +543,7 @@ namespace AtmSqlite
                     {
                         while (reader.Read())
                         {
-                            var username = reader.GetString(0);
+                            username = reader.GetString(0);
                             rGuthaben = reader.GetDouble(1);
                             connection.Close();
                             UserExist = "yes";
@@ -634,7 +629,7 @@ namespace AtmSqlite
 
                     while (true)
                     {
-                        Console.WriteLine($"How much do you want to send to {rUserName}?");
+                        Console.WriteLine($"How much do you want to send?");
                         Console.Write("Amount: ");
                         Amount = int.Parse(Console.ReadLine());
                         Convert.ToDouble(Amount);
@@ -668,9 +663,9 @@ namespace AtmSqlite
 
                     connection.Open(); 
                     var selectCommand = connection.CreateCommand();
-                    selectCommand.CommandText = "SELECT * FROM bankaccounts WHERE username = @username";
+                    selectCommand.CommandText = "SELECT * FROM bankaccounts WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@username", rUserName);
-                    selectCommand.CommandText = "UPDATE bankaccounts SET Guthaben = @guthaben WHERE username = @username";
+                    selectCommand.CommandText = "UPDATE bankaccounts SET Guthaben = @guthaben WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@guthaben", rUserBalance);
                     selectCommand.ExecuteNonQuery();
                     connection.Close();
@@ -685,9 +680,9 @@ namespace AtmSqlite
                 {
                     connection.Open();
                     var selectCommand = connection.CreateCommand();
-                    selectCommand.CommandText = "SELECT * FROM bankaccounts WHERE username = @username";
+                    selectCommand.CommandText = "SELECT * FROM bankaccounts WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@username", CurrentUser);
-                    selectCommand.CommandText = "UPDATE bankaccounts SET Guthaben = @guthaben WHERE username = @username";
+                    selectCommand.CommandText = "UPDATE bankaccounts SET Guthaben = @guthaben WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@guthaben", sUserBalance);
                     selectCommand.ExecuteNonQuery();
                     connection.Close();
@@ -728,21 +723,58 @@ namespace AtmSqlite
                     var selectCommand = connection.CreateCommand();
                     selectCommand.CommandText = "SELECT username, Guthaben FROM bankaccounts;";           
                     selectCommand.ExecuteNonQuery();
-                    using (var reader = selectCommand.ExecuteReader())
-                    {
+                    Console.WriteLine("Here is a list of alle Users: ");
+                    int UserPosition = 1;
+                     using (var reader = selectCommand.ExecuteReader())
+                     {
                         while (reader.Read())
                         {
                             var username = reader.GetString(0);
                             var guthaben = reader.GetDouble(1);
-                            Console.WriteLine($"Username: {username}, Balance: {guthaben}");                     
-                        }                                 
-                    }    
+                            Console.WriteLine($"{UserPosition}. Username: {username}, Balance: {guthaben}");     
+                            UserPosition = UserPosition + 1;
+                        }
+                    Console.WriteLine(@"
+
+
+");
+                        UserPosition = 0;
+                     }    
                 }
             }
-
-            //Löscht BankAccount nach Wahl
-            static void DeleteUser()
+        static void ShowUsersLite()
+        {
+            using (var connection = new SqliteConnection("Data Source=atm.db"))
             {
+                connection.Open();
+                var selectCommand = connection.CreateCommand();
+                selectCommand.CommandText = "SELECT username, Guthaben FROM bankaccounts;";
+                selectCommand.ExecuteNonQuery();
+                Console.WriteLine("All existing Users: ");
+                int UserPosition = 1;
+                using (var reader = selectCommand.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var username = reader.GetString(0);
+                        var guthaben = reader.GetDouble(1);
+                        Console.WriteLine($"{UserPosition}. Username: {username}");
+                        UserPosition = UserPosition + 1;
+                    }
+                    Console.WriteLine(@"
+
+
+");
+                    UserPosition = 0;
+                }
+            }
+        }
+
+        //Löscht BankAccount nach Wahl
+        static void DeleteUser()
+            {
+            Console.Clear();
+            ShowUsersLite();
                 using (var connection = new SqliteConnection("Data Source=atm.db"))
                 {
                 while (true)
@@ -777,6 +809,8 @@ namespace AtmSqlite
             //Bearbeitung des ausgewählten BankAccounts
             static void EditUser()
             {
+            Console.Clear();
+            ShowUsersLite();
                 string newPin;   
                 double newerBalance;
                 double newBalance;
@@ -800,20 +834,20 @@ namespace AtmSqlite
                         UserExist = "no";
                         break;
                     }
-                    selectCommand.CommandText = "SELECT * FROM bankaccounts WHERE username = @username";
+                    selectCommand.CommandText = "SELECT * FROM bankaccounts WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@username", username);
 
                     //Aktualisiert den Namen
                     Console.Write("Enter the new Name: ");
                     newName = Console.ReadLine();
-                    selectCommand.CommandText = "UPDATE bankaccounts SET username = @newUsername WHERE username = @username";
+                    selectCommand.CommandText = "UPDATE bankaccounts SET username = @newUsername WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@newUsername", newName);
                     selectCommand.ExecuteNonQuery();
 
                     //Aktualisiert den PIN
                     Console.Write("Enter the new Passwort: ");
                     newPin = Console.ReadLine();
-                    selectCommand.CommandText = "UPDATE bankaccounts SET Pin = @pin WHERE username = @username";
+                    selectCommand.CommandText = "UPDATE bankaccounts SET Pin = @pin WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@pin", newPin);
                     selectCommand.ExecuteNonQuery();
 
@@ -821,7 +855,7 @@ namespace AtmSqlite
                     Console.Write("Enter the new Balance: ");
                     newBalance = int.Parse(Console.ReadLine());
                     newerBalance = Convert.ToDouble(newBalance);
-                    selectCommand.CommandText = "UPDATE bankaccounts SET Guthaben = @guthaben WHERE username = @username";
+                    selectCommand.CommandText = "UPDATE bankaccounts SET Guthaben = @guthaben WHERE username LIKE @username";
                     selectCommand.Parameters.AddWithValue("@guthaben", newerBalance);
                     selectCommand.ExecuteNonQuery();
 
